@@ -8,16 +8,16 @@
 
 #define TIME_HEADER  "T"   // Header tag for serial time sync message
 #define TIME_REQUEST  7    // ASCII bell character requests a time sync message 
-#define FILE          "data6.txt"
+#define FILE          "data.txt"
 #define DEPTH         400
 #define ID            22145
 #define SAMPLING_TIME 10
 
-//#define DEBUG 1
+#define DEBUG 1
 //#define TIME_DEB 1
 //#define HTTP_DEB 1
 //#define PRINT_SD
-//#define ESSENTIALS 1
+#define ESSENTIALS 1
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(192, 168, 209, 2);
@@ -26,7 +26,6 @@ EthernetClient client;
 
 // NTP Servers:
  IPAddress timeServer(192,168,209,1); // Router NTP SERVER
-// IPAddress timeServer(132, 163, 4, 102); // time-b.timefreq.bldrdoc.gov
 // IPAddress timeServer(132, 163, 4, 103); // time-c.timefreq.bldrdoc.gov
 // IPAddress timeServer(131,107,13,100);
 
@@ -107,6 +106,8 @@ int depth_measure(){
 
 void(* resetFunc) (void) = 0; //declare reset function at address 0
 
+
+
 void setup() {
   Ethernet.begin(mac, ip);
   Serial.begin(9600);
@@ -159,7 +160,7 @@ void setup() {
   timeSetup();
 //  pumpChange = digitalRead(pump);
   
-  delay(300);
+  delay(600);
 }
 
 int entries = 1;
@@ -228,6 +229,7 @@ void webSrvr(){
     
        
     if (success) {
+        writeIntoFile();
         pos = 0;
         writeResponse(client);
     }
@@ -245,7 +247,7 @@ void writeIntoFile(){
   writeDate();
   writeTime();
   
-  writeDepth(DEPTH);
+//  writeDepth(DEPTH);
   
   writePump_1_OnOff();
   writePump_2_OnOff();
@@ -260,8 +262,9 @@ void writeIntoFile(){
 }
 
 void writeID(){
+   
   myFile = SD.open(FILE, FILE_WRITE);
-  
+ 
   if(myFile){
 #ifdef DEBUG
     Serial.println(F("Writing ID"));
@@ -277,6 +280,7 @@ void writeID(){
  }
  else{
     Serial.println(F("Error Writing ID"));
+    delay(50);
     resetFunc();
  }
    
