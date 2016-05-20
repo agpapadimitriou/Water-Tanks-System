@@ -7,8 +7,9 @@
 
 
 //#define DEPTHMETER 1
-#define LIQUIDCRYSTAL 1
+//#define SAMPLING_TIME 10
 
+#define LIQUIDCRYSTAL 1
 #ifdef LIQUIDCRYSTAL
   #include <LiquidCrystal_I2C.h>
 #endif
@@ -19,7 +20,7 @@
 #define SDFILE          "data.txt"
 #define DEPTH        -1 //400  //-1 For no Tank or Tank height 
 #define ID            22145
-//#define SAMPLING_TIME 10
+
 
 
 
@@ -42,8 +43,8 @@ IPAddress timeServer(192, 168, 209, 1); // Router NTP SERVER
 const byte timeZone = 3;     // Central European Time
 EthernetUDP Udp;
 unsigned int localPort = 8888;  // local port to listen for UDP packets
-
 time_t prevDisplay = 0; // when the digital clock was displayed
+
 File myFile;
 
 char _reading[15];
@@ -89,6 +90,9 @@ bool readRequest(EthernetClient& client) {
         if(reading){
           // If next character is legit prepare flag for answer
          if (c !='?') reading = false;
+         // If request is just to see if alive
+         if (c=='5') writeHeader(client);
+         // If request is for data
          if (c=='4') legitRequest = true;
         } 
       
@@ -131,7 +135,6 @@ bool readRequest(EthernetClient& client) {
 #endif
 
 void(* resetFunc) (void) = 0; //declare reset function at address 0
-
 
 
 void setup() {
@@ -368,7 +371,9 @@ void webSrvr() {
       //writeIntoFile();
       delay(50);
       pos = 0;
-      writeResponse(client);
+      writeHeader(client);
+      encodeStreamToJsonObject(client);
+      
     }
     delay(10);
     client.stop();
@@ -653,13 +658,12 @@ void encodeStreamToJsonObject(EthernetClient client) {
 }
 
 
-void writeResponse(EthernetClient& client) {
+void writeHeader(EthernetClient& client) {
   client.println(F("HTTP/1.1 200 OK"));
   client.println(F("Content-Type: application/json"));
   client.println(F("Connection: Keep-Alive"));
   client.println();
 
-  encodeStreamToJsonObject(client);
 }
 
 /*
