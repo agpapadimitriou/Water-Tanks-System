@@ -1,0 +1,163 @@
+
+
+//  Working voltage = 5.4v
+//  I = max 160 mA
+//  **********DO NOT CONNECT TO ARDUINO 5v **************
+//  M590 refers defaul baud rate 115200 -- I found 38400 to mine
+//  SoftwareSerial does not work >19200 baud
+//  First Via computer RS233 we set from 38400 to 9600 baud
+
+
+#include <SoftwareSerial.h>
+
+SoftwareSerial gsm(7,8); // RX, TX
+int ch = 0;
+String val = "";
+
+
+void setup() {
+  Serial.begin(9600);
+  gsm.begin(9600);           // We have to set m590 baudrate to 9600 via comp rs232         
+  delay(5000);
+  Serial.println("Arduino ON LINE");
+//  gsm.write("AT+IPR=9600");
+
+
+Serial.println("GSM tester v1.0");
+  gsm.println("AT+CLIP=1");
+  delay(100);
+  gsm.println("AT+CMGF=1"); // SMS mode 1=text
+  delay(100);
+  gsm.println("AT+CSCS=\"GSM\"");  //This command is to set TE character set
+  delay(100);
+
+Serial.println("SMS Indication format"); 
+  gsm.print("AT+CNMI=2,2,0,0,0\r"); 
+  delay(2500);
+
+Serial.println("Ready...");
+  gsm.println("AT+CMGD=1,4"); // delete all SMS
+  Serial.println("delete all SMS"); // delete all SMS
+  delay(2500);  
+Serial.println ("Connected to");
+  gsm.println("AT+COPS?");
+  delayWithRelay(1000);
+
+  
+}
+
+
+void delayWithRelay(uint32_t del) {
+  uint32_t timestamp = millis();
+  while (millis() - timestamp < del) {
+    if (gsm.available()) {
+      Serial.write(gsm.read());
+    }
+    if (Serial.available()) {
+      gsm.write(Serial.read());
+    }
+  }
+}
+
+
+void sms(String text, String phone){
+  Serial.println("SMS send started");
+  gsm.println("AT+CMGS=\"" + phone + "\"");
+  delay(500);
+  gsm.print(text);
+  delay(500);
+  gsm.print((char)26);
+  gsm.print((char)13);
+  gsm.print((char)10);
+  delay(500);
+  Serial.println("SMS send complete");
+  delay(2000);
+}
+
+void loop() {
+
+
+ /*
+ gsm.println("ati");
+   delayWithRelay(1000);
+ 
+
+gsm.println("AT+CCLK?");
+   delayWithRelay(1000);
+
+ gsm.println("AT+CSQ");
+   delayWithRelay(1000);
+
+gsm.println("AT+CCID");
+   delayWithRelay(1000);
+
+gsm.println("AT+CREG?");
+   delayWithRelay(1000);
+
+//gsm.println("AT+CFUN=16");
+//   delayWithRelay(1000);
+
+
+gsm.println("AT+CFUN?");
+   delayWithRelay(1000);
+
+gsm.println("AT+CPIN?");
+   delayWithRelay(1000);
+
+gsm.println("AT+COPS?");
+   delayWithRelay(1000);
+
+gsm.println("AT+XBANDSEL?");
+   delayWithRelay(1000);
+
+gsm.println("AT+CEER");
+   delayWithRelay(1000);
+
+*/
+
+
+   if (gsm.available()) {
+    while (gsm.available()) {
+      ch = gsm.read();
+      val += char(ch);
+      delay(10);
+    }
+     
+    if (val.indexOf("RING") > -1) { 
+      if (val.indexOf("306937807458") > -1) {
+        Serial.println("--- MASTER RING DETECTED ---");
+        gsm.println("ATH0");
+        delay(5000);
+        sms(String("MASTER RING"), String("693XXXXX58"));
+        delay(3000);
+       } else
+      Serial.println(val); 
+    val = "";
+  } else {
+   if (val.indexOf("sendsms") > -1) {
+        sms(String("hello world"), String("693XXXXX58"));
+        val = "";
+        delay(3000);
+       }
+  } 
+}
+  if (Serial.available()) { 
+    while (Serial.available()) {
+      ch = Serial.read();
+      val += char(ch);
+      delay(10);
+    }
+
+    //gsm.println(val);
+
+    if (val.indexOf("sendsms") > -1) {
+      sms(String("hello world"), String("693XXXXX58"));
+    }
+    val = "";
+    
+}
+
+//delayWithRelay(5000);
+
+
+}
