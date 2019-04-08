@@ -1681,7 +1681,7 @@ void createFile() {
 */
 
 void prepareNextData() {
-	deleteFile();
+	if (SD.exists(SDFILE)) deleteFile();;
 	entries = 1;
 	createFile();
 	writeIntoFile();
