@@ -111,7 +111,7 @@ String Version="2.0.0.1";
 	#ifndef WATCHDOG
 		unsigned long _ElapsedTime = _StartTiming - _ThisTime;
 	#endif
-	float LAN_DISC_TIME = 600000;
+	float LAN_DISC_TIME = 6000;
 #endif
 
 
@@ -269,6 +269,7 @@ bool readRequest(EthernetClient& client) {
 		}
 	  }
 	Serial.println(F(""));
+	client.stop();
 	return false;
 }
 
@@ -294,6 +295,8 @@ void resetFunc () {
 
 void setup() {
 
+    Serial.begin(9600);
+    
     //****************** Reset Watchdog Timer  ******************
     #ifdef WATCHDOG
       pinMode(Watchdog_Pin, OUTPUT);
@@ -304,7 +307,6 @@ void setup() {
     
     // ****************** Initialize Ethernet ***************
     Ethernet.begin(mac, ip, _dns, gateway, subnet);
-    Serial.begin(9600);
     server.begin();
     
     // ****************** Initialize GSM if exists ***************
@@ -355,7 +357,7 @@ void setup() {
          // delay(2000);
     //}
     #endif
-    
+    Serial.println ("Was Here");
     // ****************** Initialize RTC and Intenal Clock ***************
     #ifdef RTCTIME
       rtc.begin();
@@ -603,6 +605,7 @@ void printIfConnected() {
   if (client.connect(server, 80)) {
     Serial.println("Internet connection available..");
   } else Serial.println ("Internet connection NOT Available");
+  client.stop();
 
 }
 
@@ -646,7 +649,7 @@ void Check_If_No_LAN() {
 					Serial.println ("Resseting");
 				#endif
 				delay (200);
-				Watchdog_Pin=28; // Define a non Connected pin as Discharge pin so FORCE HARD RESET
+			//	Watchdog_Pin=28; // Define a non Connected pin as Discharge pin so FORCE HARD RESET
 				//_resetFunc();	
 			}
 		} else {
@@ -655,6 +658,9 @@ void Check_If_No_LAN() {
 		}
 	
 	}
+ 
+ client.stop();
+ 
 }
 
 
