@@ -357,7 +357,7 @@ void setup() {
          // delay(2000);
     //}
     #endif
-    Serial.println ("Was Here");
+   // Serial.println ("Was Here");
     // ****************** Initialize RTC and Intenal Clock ***************
     #ifdef RTCTIME
       rtc.begin();
